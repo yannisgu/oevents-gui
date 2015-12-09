@@ -1,0 +1,23 @@
+{
+  "name": "oevents-gui",
+  "version": "1.0.0",
+  "description": "oevents-gui",
+  "repository": {
+    "type": "git",
+    "url": "https://gitub.com/yannisgu/oevents-gui"
+  },
+  "engines": {
+    "node": "0.12.6"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+      "grunt": "",
+       "grunt-html2js": "~0.1.7",
+    "grunt-contrib-less": "~0.7.0",
+      "grunt-typescript": ""
+  },
+    "scripts": {
+        "start": "node app.js"
+    }
+}
