@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Copy this script into your html file to enable Application Insights --> <script type="text/javascript"> var appInsights = { queue: [], start: function (n) { function r(n, t) { n[t] = function () { var i = arguments; n.queue.push(function () { n[t].apply(n, i) }) } } var t, i; this.applicationInsightsId = n; this.accountId = null; this.appUserId = null; r(this, "logEvent"); r(this, "logPageView"); t = document.createElement("script"); t.type = "text/javascript"; t.src = "//az416426.vo.msecnd.net/scripts/ai.js"; t.async = !0; i = document.getElementsByTagName("script")[0]; i.parentNode.insertBefore(t, i) } }; appInsights.start("007b97cd-6809-4445-99bc-d241d7e67bdc"); appInsights.logPageView(); </script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>oevents</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/app.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="js/html5shiv.js"></script>
+    <script src="js/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body ng-app="app">
+
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="brand" href="#">oevents</a>
+
+            <div class="nav-collapse collapse" style="display:  none;" ng-show="true">
+                <ul class="nav">
+                    <li><a href="#/results">{{ 'RESULTS_MENU' | translate }}</a></li>
+                </ul>
+                <ul class="nav">
+                    <li><a href="#/person">{{ 'PERSON_MENU' | translate }}</a></li>
+                </ul>
+                <ul class="nav">
+                    <li><a href="https://github.com/yannisgu/oevents/wiki/API">API </a></li>
+                </ul>
+                <ul class="nav">
+                    <li><a href="https://github.com/yannisgu/oevents/issues">Bugs </a></li>
+                </ul>
+                <ul class="nav">
+                    <li><a href="https://github.com/yannisgu/oevents">Contribute </a></li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    <div ng-view>
+    </div>
+
+</div>
+<!-- /.container -->
+
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="js/jquery.min.js"></script>
+<script src="js/underscore-min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/angular.min.js"></script>
+<script src="js/angular-translate.min.js"></script>
+<script src="js/bindonce.js"></script>
+<script src="js/select2.js"></script>
+<script src="js/select2_de.js"></script>
+<script src="js/ui-bootstrap.js"></script>
+<script src="js/templates.js"></script>
+<script src="js/app.js"></script>
+<script src="dpd.js"></script>
+</body>
+</html>

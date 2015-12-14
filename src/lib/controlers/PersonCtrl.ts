@@ -10,6 +10,13 @@ module App.Controllers{
                 renderPerson($scope.personId)
             }
 
+            $scope.personChanged = function(val) {
+                $scope.loading = true;
+                $scope.$apply();
+                $location.search({person: val});
+                renderPerson(val)
+            }
+
             $scope.sortCategory = function(field){
                 $scope.sortFieldCategory = $scope.sortFieldCategory == field ? "-" + field : field;
             }
