@@ -29,7 +29,7 @@ module App.Controllers {
 
     export class ResultsByPersonCtrl {
 
-        constructor($scope:IResultsByPersonScope, $location:ng.ILocationService) {
+        constructor($scope:IResultsByPersonScope, $location:ng.ILocationService, $http) {
 
             $scope.groups = [];
 
@@ -67,6 +67,72 @@ module App.Controllers {
                 }
             }
 
+            function searchResults(query, $scope) {
+                $http({url :'/api/results', method: 'GET',
+                    params: {query: query}})
+                    .then(function (response, err) {
+                    var res = response.data;
+                    $scope.loading = false;
+                    if (err) {
+                        $scope.$apply();
+                        throw err;
+                    }
+                    res = _.map(res, function (result : any) {
+                        if (result.event && result.event.date) {
+                            result.event.date = new Date(result.event.date);
+                        }
+                        if (result.event && result.event.urlSource) {
+                            result.event.url = result.event.urlSource.replace("kind=all", "kat=" + result.category)
+
+                        }
+                        return result;
+                    });
+
+                    if ($scope.fromDate || $scope.toDate) {
+                        res = _.filter(res, function (result : any) {
+                            var returnValue = true;
+                            if ($scope.fromDate) {
+                                returnValue = returnValue && $scope.fromDate <= result.event.date;
+                            }
+                            if ($scope.toDate) {
+                                returnValue = returnValue && $scope.toDate >= result.event.date;
+                            }
+
+                            return returnValue;
+                        });
+                    }
+
+                    var groups:Array<IGroupResults> = [];
+
+                    if ($scope.groupByYear) {
+                        var groupObj = _.groupBy(res, function (result : any) {
+                            return result.event.date.getFullYear();
+                        })
+
+                        for (var i in groupObj) {
+                            groups.push({
+                                title: i,
+                                results: groupObj[i],
+                                isOpen: true
+                            })
+                        }
+
+                        groups = _.sortBy(groups, "title");
+                    }
+                    else {
+                        groups.push({
+                            title: "All",
+                            results: res,
+                            isOpen: true
+                        })
+                    }
+
+                    $scope.groups = groups;
+                    $scope.$apply();
+
+                });
+            }
+
         }
 
     }
@@ -84,68 +150,7 @@ module App.Controllers {
         return query;
     }
 
-    function searchResults(query, $scope) {
-        dpd.resultsevents.get(query, function (res, err) {
-            $scope.loading = false;
-            if (err) {
-                $scope.$apply();
-                throw err;
-            }
-            res = _.map(res, function (result : any) {
-                if (result.event && result.event.date) {
-                    result.event.date = new Date(result.event.date);
-                }
-                if (result.event && result.event.urlSource) {
-                    result.event.url = result.event.urlSource.replace("kind=all", "kat=" + result.category)
 
-                }
-                return result;
-            });
-
-            if ($scope.fromDate || $scope.toDate) {
-                res = _.filter(res, function (result : any) {
-                    var returnValue = true;
-                    if ($scope.fromDate) {
-                        returnValue = returnValue && $scope.fromDate <= result.event.date;
-                    }
-                    if ($scope.toDate) {
-                        returnValue = returnValue && $scope.toDate >= result.event.date;
-                    }
-
-                    return returnValue;
-                });
-            }
-
-            var groups:Array<IGroupResults> = [];
-
-            if ($scope.groupByYear) {
-                var groupObj = _.groupBy(res, function (result : any) {
-                    return result.event.date.getFullYear();
-                })
-
-                for (var i in groupObj) {
-                    groups.push({
-                        title: i,
-                        results: groupObj[i],
-                        isOpen: true
-                    })
-                }
-
-                groups = _.sortBy(groups, "title");
-            }
-            else {
-                groups.push({
-                    title: "All",
-                    results: res,
-                    isOpen: true
-                })
-            }
-
-            $scope.groups = groups;
-            $scope.$apply();
-
-        });
-    }
 }
 
-App.registerController("ResultsByPersonCtrl", ["$scope", "$location"]);
+App.registerController("ResultsByPersonCtrl", ["$scope", "$location", "$http"]);

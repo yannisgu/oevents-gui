@@ -1,6 +1,6 @@
 module App.Controllers{
     export class PersonCtrl {
-        constructor($scope, $location) {
+        constructor($scope, $location, $http) {
 
             $scope.results = [];
 
@@ -19,18 +19,15 @@ module App.Controllers{
 
             }
 
-            $scope.personChanged = function(id){
-                $scope.loading = true;
-                $scope.$apply();
-                $location.search({person: id});
-
-                renderPerson(id);
-
-
+            $scope.resultUrl = function(result) {
+                return result.event.url ? result.event.url : 'http://www.o-l.ch/cgi-bin/results?type=rang&rl_id=' + result.event.id + '&kat=' + result.category
             }
 
             function renderPerson(id) {
-                dpd.resultsevents.get({personId: id}, function(res, err){
+                $http({url :'/api/results', method: 'GET',
+                    params: {query: JSON.stringify({"personId": id})}})
+                    .then(function (response, err) {
+                    var res = response.data;
                     $scope.loading = false;
 
                     res = _.map(res, function (result : any) {
@@ -52,6 +49,7 @@ module App.Controllers{
                     $scope.categoryGroups = groupResultyBy(res, function (result) {
                         return result.category;
                     })
+
 
                     $scope.results = res;
                     $scope.$apply();
@@ -94,4 +92,4 @@ module App.Controllers{
     }
 }
 
-App.registerController("PersonCtrl", ["$scope","$location"]);
+App.registerController("PersonCtrl", ["$scope","$location", "$http"]);

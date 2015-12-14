@@ -10,14 +10,16 @@
     "node": "0.12.6"
   },
   "dependencies": {
+    "express": "^4.13.3",
+    "mongodb": "^2.1.0"
   },
   "devDependencies": {
-      "grunt": "",
-       "grunt-html2js": "~0.1.7",
+    "grunt": "",
+    "grunt-html2js": "~0.1.7",
     "grunt-contrib-less": "~0.7.0",
-      "grunt-typescript": ""
+    "grunt-typescript": ""
   },
-    "scripts": {
-        "start": "node app.js"
-    }
+  "scripts": {
+    "start": "node app.js"
+  }
 }

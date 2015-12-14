@@ -72,7 +72,7 @@ var App;
     var Controllers;
     (function (Controllers) {
         var PersonCtrl = (function () {
-            function PersonCtrl($scope, $location) {
+            function PersonCtrl($scope, $location, $http) {
                 $scope.results = [];
                 if ($location.search().person) {
                     $scope.personId = $location.search().person;
@@ -85,14 +85,14 @@ var App;
                 $scope.sortYear = function (field) {
                     $scope.sortFieldYear = $scope.sortFieldYear == field ? "-" + field : field;
                 };
-                $scope.personChanged = function (id) {
-                    $scope.loading = true;
-                    $scope.$apply();
-                    $location.search({ person: id });
-                    renderPerson(id);
+                $scope.resultUrl = function (result) {
+                    return result.event.url ? result.event.url : 'http://www.o-l.ch/cgi-bin/results?type=rang&rl_id=' + result.event.id + '&kat=' + result.category;
                 };
                 function renderPerson(id) {
-                    dpd.resultsevents.get({ personId: id }, function (res, err) {
+                    $http({ url: '/api/results', method: 'GET',
+                        params: { query: JSON.stringify({ "personId": id }) } })
+                        .then(function (response, err) {
+                        var res = response.data;
                         $scope.loading = false;
                         res = _.map(res, function (result) {
                             if (result.event && result.event.date) {
@@ -148,7 +148,7 @@ var App;
         }
     })(Controllers = App.Controllers || (App.Controllers = {}));
 })(App || (App = {}));
-App.registerController("PersonCtrl", ["$scope", "$location"]);
+App.registerController("PersonCtrl", ["$scope", "$location", "$http"]);
 var App;
 (function (App) {
     var Controllers;
@@ -192,7 +192,7 @@ var App;
     var Controllers;
     (function (Controllers) {
         var ResultsByPersonCtrl = (function () {
-            function ResultsByPersonCtrl($scope, $location) {
+            function ResultsByPersonCtrl($scope, $location, $http) {
                 $scope.groups = [];
                 $scope.$on("newQuery", function () {
                     queryData();
@@ -218,6 +218,62 @@ var App;
                         }
                     }
                 }
+                function searchResults(query, $scope) {
+                    $http({ url: '/api/results', method: 'GET',
+                        params: { query: query } })
+                        .then(function (response, err) {
+                        var res = response.data;
+                        $scope.loading = false;
+                        if (err) {
+                            $scope.$apply();
+                            throw err;
+                        }
+                        res = _.map(res, function (result) {
+                            if (result.event && result.event.date) {
+                                result.event.date = new Date(result.event.date);
+                            }
+                            if (result.event && result.event.urlSource) {
+                                result.event.url = result.event.urlSource.replace("kind=all", "kat=" + result.category);
+                            }
+                            return result;
+                        });
+                        if ($scope.fromDate || $scope.toDate) {
+                            res = _.filter(res, function (result) {
+                                var returnValue = true;
+                                if ($scope.fromDate) {
+                                    returnValue = returnValue && $scope.fromDate <= result.event.date;
+                                }
+                                if ($scope.toDate) {
+                                    returnValue = returnValue && $scope.toDate >= result.event.date;
+                                }
+                                return returnValue;
+                            });
+                        }
+                        var groups = [];
+                        if ($scope.groupByYear) {
+                            var groupObj = _.groupBy(res, function (result) {
+                                return result.event.date.getFullYear();
+                            });
+                            for (var i in groupObj) {
+                                groups.push({
+                                    title: i,
+                                    results: groupObj[i],
+                                    isOpen: true
+                                });
+                            }
+                            groups = _.sortBy(groups, "title");
+                        }
+                        else {
+                            groups.push({
+                                title: "All",
+                                results: res,
+                                isOpen: true
+                            });
+                        }
+                        $scope.groups = groups;
+                        $scope.$apply();
+                    });
+                }
             }
             return ResultsByPersonCtrl;
         })();
@@ -233,68 +289,15 @@ var App;
             }
             return query;
         }
-        function searchResults(query, $scope) {
-            dpd.resultsevents.get(query, function (res, err) {
-                $scope.loading = false;
-                if (err) {
-                    $scope.$apply();
-                    throw err;
-                }
-                res = _.map(res, function (result) {
-                    if (result.event && result.event.date) {
-                        result.event.date = new Date(result.event.date);
-                    }
-                    if (result.event && result.event.urlSource) {
-                        result.event.url = result.event.urlSource.replace("kind=all", "kat=" + result.category);
-                    }
-                    return result;
-                });
-                if ($scope.fromDate || $scope.toDate) {
-                    res = _.filter(res, function (result) {
-                        var returnValue = true;
-                        if ($scope.fromDate) {
-                            returnValue = returnValue && $scope.fromDate <= result.event.date;
-                        }
-                        if ($scope.toDate) {
-                            returnValue = returnValue && $scope.toDate >= result.event.date;
-                        }
-                        return returnValue;
-                    });
-                }
-                var groups = [];
-                if ($scope.groupByYear) {
-                    var groupObj = _.groupBy(res, function (result) {
-                        return result.event.date.getFullYear();
-                    });
-                    for (var i in groupObj) {
-                        groups.push({
-                            title: i,
-                            results: groupObj[i],
-                            isOpen: true
-                        });
-                    }
-                    groups = _.sortBy(groups, "title");
-                }
-                else {
-                    groups.push({
-                        title: "All",
-                        results: res,
-                        isOpen: true
-                    });
-                }
-                $scope.groups = groups;
-                $scope.$apply();
-            });
-        }
     })(Controllers = App.Controllers || (App.Controllers = {}));
 })(App || (App = {}));
-App.registerController("ResultsByPersonCtrl", ["$scope", "$location"]);
+App.registerController("ResultsByPersonCtrl", ["$scope", "$location", "$http"]);
 var App;
 (function (App) {
     var Directives;
     (function (Directives) {
         Directives.PepoplePickerCache = {};
-        function PeoplePicker() {
+        function PeoplePicker($http) {
             return {
                 templateUrl: 'templates/peoplePicker.html',
                 restrict: 'E',
@@ -308,8 +311,8 @@ var App;
                     $scope.$watch('person', function (oldValue, newValue) {
                         if (element.find(".people-picker").val() != $scope.person) {
                             if ($scope.person) {
-                                dpd.people.get($scope.person, function (res, err) {
-                                    console.log(res);
+                                $http({ method: 'GET', url: '/api/person', params: { id: $scope.person } }).then(function (response, err) {
+                                    var res = response.data;
                                     if (res) {
                                         element.find(".people-picker").select2('data', { id: res.id, text: res.name + (res.yearOfBirth ? ", " + res.yearOfBirth : "") });
                                     }
@@ -325,10 +328,11 @@ var App;
                             var data = {
                                 results: []
                             };
-                            dpd.peoplesearch.get({ search: cleanupName(query.term) }, function (res, err) {
-                                if (res.results) {
-                                    for (var i = 0; i < res.results.length && i < 10; i++) {
-                                        var obj = res.results[i].obj;
+                            $http({ method: 'GET', url: '/api/peopleSearch', params: { query: query.term } }).then(function (response, err) {
+                                var res = response.data;
+                                if (res) {
+                                    for (var i = 0; i < res.length && i < 10; i++) {
+                                        var obj = res[i];
                                         data.results.push({ id: obj._id, text: obj.name + (obj.yearOfBirth ? ", " + obj.yearOfBirth : "") });
                                         query.callback(data);
                                     }
@@ -406,13 +410,12 @@ function cleanupName(name) {
     name.replace('oe', 'o');
     return name;
 }
-App.registerDirective('PeoplePicker', []);
+App.registerDirective('PeoplePicker', ["$http"]);
 var App;
 (function (App) {
     var Directives;
     (function (Directives) {
-        // db.results.group({key: {personId: 1},cond: {category: "D14"},reduce:  function(curr, res){res.count++; res.name =  curr; return res; } ,initial: {count: 0}})
-        function ResultsByCategory($location) {
+        function ResultsByCategory($location, $http) {
             return {
                 templateUrl: 'templates/resultsByCategory.html',
                 restrict: 'E',
@@ -445,31 +448,32 @@ var App;
                             var query = $scope.query;
                             $scope.loading = true;
                             $scope.category = query.category;
-                            searchResults(query, $scope);
+                            searchResults(query, $scope, $http);
                         }
                     }
                 }
             };
         }
         Directives.ResultsByCategory = ResultsByCategory;
-        function searchResults(query, $scope) {
-            query.$fields = { personId: 1, name: 1, yearOfBirth: 1, rank: 1 };
-            dpd.results.get(query, function (res, err) {
+        function searchResults(query, $scope, $http) {
+            $http({ url: '/api/results', method: 'GET',
+                params: { query: query, fields: { name: 1, yearOfBirth: 1, rank: 1, personId: 1 } } })
+                .then(function (resonse, err) {
                 $scope.loading = false;
                 if (err) {
                     $scope.$apply();
                     throw err;
                 }
-                console.log(new Date().getTime());
+                var res = resonse.data;
                 var persons = _.reduce(res, function (merged, object, index2) {
-                    var index = object.personId;
+                    var index = object.name + "$" + object.yearOfBirth;
                     merged[index] = merged[index] || {
                         name: object.name,
-                        personId: object.personId,
                         yearOfBirth: object.yearOfBirth,
                         victories: 0,
                         counts: 0,
-                        podiums: 0
+                        podiums: 0,
+                        personId: object.personId
                     };
                     if (object.rank == 1)
                         merged[index].victories++;
@@ -482,18 +486,19 @@ var App;
                 for (var i in persons) {
                     personsArray.push(persons[i]);
                 }
+                console.log(personsArray);
                 $scope.persons = personsArray;
                 $scope.$apply();
             });
         }
     })(Directives = App.Directives || (App.Directives = {}));
 })(App || (App = {}));
-App.registerDirective('ResultsByCategory', ["$location"]);
+App.registerDirective('ResultsByCategory', ["$location", "$http"]);
 var App;
 (function (App) {
     var Directives;
     (function (Directives) {
-        function ResultsByClub() {
+        function ResultsByClub($http) {
             return {
                 templateUrl: 'templates/resultsByClub.html',
                 restrict: 'E',
@@ -530,16 +535,19 @@ var App;
                         $scope.sortField = $scope.sortField == field ? "-" + $scope.sortField : field;
                     };
                     function searchResults() {
-                        var query = { club: { "$regex": $scope.club, $options: 'i' }, date: null };
+                        var query = { club: { "$regex": $scope.club, $options: 'i' } };
                         if ($scope.selectedYear != "all") {
-                            query.date = {
+                            query["event.date"] = {
                                 $gte: new Date($scope.selectedYear, 0, 1).getTime(),
                                 $lte: new Date($scope.selectedYear, 11, 31).getTime()
                             };
                         }
-                        dpd.results.get(query, function (entries, error) {
+                        $http({ url: '/api/results', method: 'GET',
+                            params: { query: JSON.stringify(query) } })
+                            .then(function (response, err) {
                             $scope.loading = false;
                             console.log((new Date).getTime());
+                            var entries = response.data;
                             entries = _.map(entries, function (result) {
                                 if (result.event && result.event.date) {
                                     result.event.date = new Date(result.event.date);
@@ -548,7 +556,7 @@ var App;
                             });
                             console.log((new Date).getTime());
                             $scope.events = groupResultyBy(entries, function (result) {
-                                return result.eventId;
+                                return result.event.id;
                             });
                             console.log((new Date).getTime());
                             $scope.$apply();
@@ -564,8 +572,8 @@ var App;
                 var index = groupFunction(object);
                 merged[index] = merged[index] || {
                     title: index,
-                    name: object.eventName,
-                    date: object.date,
+                    name: object.event.name,
+                    date: object.event.date,
                     victories: 0,
                     counts: 0,
                     podiums: 0,
@@ -591,7 +599,7 @@ var App;
         }
     })(Directives = App.Directives || (App.Directives = {}));
 })(App || (App = {}));
-App.registerDirective('ResultsByClub', []);
+App.registerDirective('ResultsByClub', ["$http"]);
 var App;
 (function (App) {
     var Directives;
@@ -630,6 +638,9 @@ var App;
                 transclude: true,
                 link: function ($scope, element, attrs) {
                     $scope.sortField = "date";
+                    $scope.resultUrl = function (result) {
+                        return result.event.url ? result.event.url : 'http://www.o-l.ch/cgi-bin/results?type=rang&rl_id=' + result.event.id + '&kat=' + result.category;
+                    };
                     $scope.sort = function (field) {
                         $scope.sortField = $scope.sortField == field ? "-" + $scope.sortField : field;
                     };

@@ -311,17 +311,18 @@ angular.module("templates/resutsTableByPerson.html", []).run(["$templateCache", 
     "\n" +
     "    <tr ng-repeat=\"result in results  | orderBy:sortField\">\n" +
     "        <td>\n" +
-    "            <a href=\"{{result.event.url}}\">\n" +
-    "                {{result.eventName}}\n" +
+    "            <a href=\"{{resultUrl(result)}}\">\n" +
+    "                {{result.event.name}}\n" +
     "                <span ng-hide=\"result.event.name\">\n" +
     "                    {{result.event.url}}\n" +
     "                </span>\n" +
     "            </a>\n" +
     "        </td>\n" +
-    "        <td>{{result.date | date:'mediumDate'}}</td>\n" +
+    "        <td>{{result.event.date | date:'mediumDate'}}</td>\n" +
     "        <td>{{result.event.map}}</td>\n" +
     "        <td>{{result.category}}</td>\n" +
     "        <td>{{result.rank}}</td>\n" +
     "    </tr>\n" +
-    "</table>");
+    "</table>\n" +
+    "");
 }]);

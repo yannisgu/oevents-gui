@@ -10,14 +10,14 @@
 
     <tr ng-repeat="result in results  | orderBy:sortField">
         <td>
-            <a href="{{result.event.url}}">
-                {{result.eventName}}
+            <a href="{{resultUrl(result)}}">
+                {{result.event.name}}
                 <span ng-hide="result.event.name">
                     {{result.event.url}}
                 </span>
             </a>
         </td>
-        <td>{{result.date | date:'mediumDate'}}</td>
+        <td>{{result.event.date | date:'mediumDate'}}</td>
         <td>{{result.event.map}}</td>
         <td>{{result.category}}</td>
         <td>{{result.rank}}</td>

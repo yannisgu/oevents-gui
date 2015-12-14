@@ -1,6 +1,6 @@
 module App.Directives {
 
-    export function ResultsByClub() {
+    export function ResultsByClub($http) {
         return {
             templateUrl: 'templates/resultsByClub.html',
             restrict: 'E',
@@ -45,18 +45,22 @@ module App.Directives {
 
 
                 function searchResults() {
-                    var query = {club: {"$regex": $scope.club, $options: 'i'}, date: null };
+                    var query = {club: {"$regex": $scope.club, $options: 'i'} };
 
                     if ($scope.selectedYear != "all") {
-                        query.date = {
+
+                        query["event.date"] = {
                             $gte: new Date($scope.selectedYear, 0, 1).getTime(),
                             $lte: new Date($scope.selectedYear, 11, 31).getTime()
                         }
                     }
-                    dpd.results.get(query, function (entries, error) {
+                    $http({url :'/api/results', method: 'GET',
+                        params: {query: JSON.stringify(query)}})
+                        .then(function (response, err) {
                         $scope.loading = false;
                         console.log((new Date).getTime())
 
+                        var entries = response.data;
                         entries = _.map(entries, function (result : any) {
                             if (result.event && result.event.date) {
                                 result.event.date = new Date(result.event.date);
@@ -66,7 +70,7 @@ module App.Directives {
 
                         console.log((new Date).getTime())
                         $scope.events = groupResultyBy(entries, function (result) {
-                            return result.eventId;
+                            return result.event.id;
                         })
 
 
@@ -86,8 +90,8 @@ module App.Directives {
             var index = groupFunction(object)
             merged[index] = merged[index] || {
                 title: index,
-                name: object.eventName,
-                date: object.date,
+                name: object.event.name,
+                date: object.event.date,
                 victories: 0,
                 counts: 0,
                 podiums: 0,
@@ -115,4 +119,4 @@ module App.Directives {
 }
 
 
-App.registerDirective('ResultsByClub', []);
+App.registerDirective('ResultsByClub', ["$http"]);

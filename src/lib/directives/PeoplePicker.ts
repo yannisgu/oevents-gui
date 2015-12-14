@@ -1,7 +1,7 @@
 module App.Directives {
     export var PepoplePickerCache = {};
 
-    export function PeoplePicker() {
+    export function PeoplePicker($http) {
         return{
         templateUrl : 'templates/peoplePicker.html',
         restrict : 'E',
@@ -17,8 +17,8 @@ module App.Directives {
             $scope.$watch('person', function(oldValue, newValue) {
                 if(element.find(".people-picker").val() != $scope.person){
                     if($scope.person) {
-                        dpd.people.get($scope.person, function(res, err){
-                            console.log(res)
+                        $http({method: 'GET', url: '/api/person', params: {id: $scope.person}}).then(function(response, err){
+                            var res = response.data;
                             if(res){
                                 element.find(".people-picker").select2('data', { id: res.id, text: res.name + (res.yearOfBirth ?  ", " + res.yearOfBirth : "") });
 
@@ -38,10 +38,11 @@ module App.Directives {
                         results: []
                     };
 
-                    dpd.peoplesearch.get({search: cleanupName(query.term)}, function(res, err) {
-                        if(res.results ) {
-                            for(var i = 0; i < res.results.length && i < 10; i++) {
-                                var obj = res.results[i].obj;
+                    $http({method: 'GET', url: '/api/peopleSearch', params: {query: query.term}}).then(function(response, err){
+                        var res = response.data;
+                        if(res ) {
+                            for(var i = 0; i < res.length && i < 10; i++) {
+                                var obj = res[i];
                                 data.results.push({id: obj._id, text: obj.name + (obj.yearOfBirth ? ", " + obj.yearOfBirth : "")});
 
                                 query.callback(data);
@@ -124,4 +125,4 @@ function cleanupName(name) {
     return name;
 }
 
-App.registerDirective('PeoplePicker', []);
+App.registerDirective('PeoplePicker', ["$http"]);

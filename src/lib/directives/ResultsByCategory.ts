@@ -24,8 +24,7 @@ module App.Directives {
         isOpen: Boolean;
     }
 
-// db.results.group({key: {personId: 1},cond: {category: "D14"},reduce:  function(curr, res){res.count++; res.name =  curr; return res; } ,initial: {count: 0}})
-    export function ResultsByCategory($location) {
+    export function ResultsByCategory($location, $http) {
         return {
             templateUrl: 'templates/resultsByCategory.html',
             restrict: 'E',
@@ -68,35 +67,35 @@ module App.Directives {
                         $scope.loading = true;
                         $scope.category = query.category
 
-                        searchResults(query, $scope);
+                        searchResults(query, $scope, $http);
                     }
                 }
             }
         }
     }
 
-    function searchResults(query, $scope) {
+    function searchResults(query, $scope, $http) {
 
-        query.$fields = {personId: 1, name: 1, yearOfBirth: 1, rank: 1};
-
-        dpd.results.get(query, function (res, err) {
+        $http({url :'/api/results', method: 'GET',
+            params:
+            {query: query, fields: {name: 1, yearOfBirth: 1, rank: 1, personId: 1}}})
+            .then(function (resonse, err) {
             $scope.loading = false;
             if (err) {
                 $scope.$apply();
                 throw err;
             }
 
-            console.log(new Date().getTime())
-
+            var res = resonse.data;
             var persons = _.reduce(res, function (merged, object : any, index2) {
-                var index = object.personId;
+                var index = object.name + "$" + object.yearOfBirth;
                 merged[index] = merged[index] || {
                     name: object.name,
-                    personId: object.personId,
                     yearOfBirth: object.yearOfBirth,
                     victories: 0,
                     counts: 0,
-                    podiums: 0
+                    podiums: 0,
+                    personId: object.personId
 
                 }
                 if (object.rank == 1) merged[index].victories++;
@@ -110,7 +109,7 @@ module App.Directives {
             for (var i in persons) {
                 personsArray.push(persons[i]);
             }
-
+            console.log(personsArray)
             $scope.persons = personsArray;
             $scope.$apply();
         });
@@ -120,4 +119,4 @@ module App.Directives {
 }
 
 
-App.registerDirective('ResultsByCategory', ["$location"]);
+App.registerDirective('ResultsByCategory', ["$location", "$http"]);
