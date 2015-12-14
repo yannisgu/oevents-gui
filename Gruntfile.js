@@ -5,7 +5,7 @@ module.exports = function(grunt) {
         typescript: {
             base: {
                 src: ['src/lib/**/*.ts'],
-                dest: 'public/js/app.js',
+                dest: 'public/js/lib.js',
                 options: {
                     module: 'amd', //or commonjs
                     sourcemap: true,
