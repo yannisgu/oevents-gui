@@ -2,7 +2,7 @@ var MongoClient = require('mongodb').MongoClient;
 
 module.exports = function(req, res) {
 
-    var url = 'mongodb://oevents:oevents@ds052968.mongolab.com:52968/oevents-new';
+    var url = 'mongodb://oevents-mongo/oevents-new';
     MongoClient.connect(url, function(err, db) {
         db.collection("people").find({_id: require('mongodb').ObjectId(req.query.id)}).toArray(function(err, results) {
             if(err) {

@@ -5,7 +5,7 @@ module.exports = function(req, res) {
 
     var query = cleanupName(query)
     mQuery = {index: {"$regex": query}}
-    var url = 'mongodb://oevents:oevents@ds052968.mongolab.com:52968/oevents-new';
+    var url = 'mongodb://oevents-mongo/oevents-new';
     MongoClient.connect(url, function(err, db) {
         db.collection("people").find(mQuery).toArray(function(err, results) {
             if(err) {
