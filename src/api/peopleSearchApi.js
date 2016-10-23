@@ -4,6 +4,7 @@ module.exports = function(req, res) {
     var query = req.query.query;
 
     var query = cleanupName(query)
+    console.log(query)
     mQuery = {index: {"$regex": query}}
     var url = 'mongodb://oevents-mongo/oevents';
     MongoClient.connect(url, function(err, db) {

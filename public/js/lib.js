@@ -110,6 +110,9 @@ var App;
                             return result;
                         });
                         $scope.yearGroups = groupResultyBy(res, function (result) {
+                            if (!result.event.date) {
+                                return "(unknown)";
+                            }
                             return result.event.date.getFullYear();
                         });
                         $scope.categoryGroups = groupResultyBy(res, function (result) {

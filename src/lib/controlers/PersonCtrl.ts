@@ -49,6 +49,9 @@ module App.Controllers{
                     });
 
                     $scope.yearGroups = groupResultyBy(res, function (result) {
+                        if(!result.event.date) {
+                            return "(unknown)"
+                        }
                         return result.event.date.getFullYear();
                     })
 
